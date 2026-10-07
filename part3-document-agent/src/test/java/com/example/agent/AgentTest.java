@@ -41,7 +41,7 @@ class AgentTest {
             case 1 -> answer("25 times 16 is 400.", Basis.CALCULATION);
             default -> {
                 assertTrue(tools.isEmpty());
-                yield answer("SUPPORTED", Basis.CALCULATION);
+                yield new Verification("SUPPORTED");
             }
         };
         Agent agent = new Agent(model, new ConversationMemory(),
@@ -326,7 +326,7 @@ class AgentTest {
             case 0 -> answer("Nice to meet you, Sean.", Basis.CONVERSATION);
             case 1 -> {
                 assertTrue(tools.isEmpty());
-                yield answer("SUPPORTED", Basis.CONVERSATION);
+                yield new Verification("SUPPORTED");
             }
             case 2 -> {
                 assertTrue(messages.stream().anyMatch(message -> "My name is Sean.".equals(message.content())));
@@ -334,7 +334,7 @@ class AgentTest {
             }
             default -> {
                 assertTrue(tools.isEmpty());
-                yield answer("SUPPORTED", Basis.CONVERSATION);
+                yield new Verification("SUPPORTED");
             }
         };
         Agent agent = new Agent(model, memory, new DocumentRetriever(Path.of("documents/sample-document.txt")),
@@ -354,7 +354,7 @@ class AgentTest {
             default -> {
                 assertTrue(tools.isEmpty(), "Verification must not offer tools");
                 assertTrue(messages.get(0).content().contains("My name is Sean."));
-                yield answer("SEMANTIC_FAILURE", Basis.NOT_FOUND);
+                yield new Verification("SEMANTIC_FAILURE");
             }
         };
         Agent agent = new Agent(model, memory, new DocumentRetriever(Path.of("documents/sample-document.txt")),
@@ -367,7 +367,7 @@ class AgentTest {
     @Test void allowsConversationAnswerAfterUnnecessarySearchWithEvidence() throws Exception {
         var memory = new ConversationMemory();
         Agent agent = new Agent(script(search("s1", "annual leave"), answer("Nice to meet you, Sean.", Basis.CONVERSATION),
-                answer("SUPPORTED", Basis.CONVERSATION)), memory,
+                new Verification("SUPPORTED")), memory,
                 new DocumentRetriever(Path.of("documents/sample-document.txt")), new CalculatorTool());
         assertEquals("Nice to meet you, Sean.", agent.chat("My name is Sean."));
         assertEquals("My name is Sean.", memory.messages().get(0).content());
@@ -376,14 +376,14 @@ class AgentTest {
     @Test void allowsConversationAnswerAfterUnnecessaryNoHitSearch() throws Exception {
         var memory = new ConversationMemory();
         Agent agent = new Agent(script(search("s1", "stock options"), answer("Nice to meet you, Sean.", Basis.CONVERSATION),
-                answer("SUPPORTED", Basis.CONVERSATION)), memory,
+                new Verification("SUPPORTED")), memory,
                 new DocumentRetriever(Path.of("documents/sample-document.txt")), new CalculatorTool());
         assertEquals("Nice to meet you, Sean.", agent.chat("My name is Sean."));
         assertTrue(memory.evidence().isEmpty());
     }
     @Test void refusesFabricationAfterNoEvidenceEvenIfModelMislabelsAnswer() throws Exception {
         Agent agent = new Agent(script(search("s1", "stock options"), answer("You get 500 shares.", Basis.CONVERSATION),
-                answer("UNSUPPORTED_EVIDENCE", Basis.NOT_FOUND)), new ConversationMemory(),
+                new Verification("UNSUPPORTED_EVIDENCE")), new ConversationMemory(),
                 new DocumentRetriever(Path.of("documents/sample-document.txt")), new CalculatorTool());
         assertEquals(Agent.NOT_FOUND, agent.chat("How many stock options do I receive?"));
     }

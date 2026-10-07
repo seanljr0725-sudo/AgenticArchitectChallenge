@@ -95,7 +95,7 @@ cd part3-document-agent
 mvn clean verify
 ```
 
-The existing test reports record **88 passing tests**.
+The current test suite reports **95 passing tests**.
 
 ### Run
 

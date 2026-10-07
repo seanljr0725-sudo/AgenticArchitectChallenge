@@ -48,6 +48,7 @@ public final class OpenAiLanguageModel implements LanguageModel {
     }
     @Override
     public Reply respond(String instructions, List<Message> messages, List<Tool> tools) throws AgentException {
+        boolean verification = tools.isEmpty();
         JsonObject body = new JsonObject();
         body.addProperty("model", model);
         body.addProperty("store", false);
@@ -79,12 +80,17 @@ public final class OpenAiLanguageModel implements LanguageModel {
             body.addProperty("tool_choice", "auto");
             body.addProperty("parallel_tool_calls", false);
         }
-        body.add("response_format", JSON.toJsonTree(Map.of("type", "json_schema", "json_schema", Map.of(
-                "name", "grounded_answer", "strict", true, "schema", Map.of("type", "object", "properties", Map.of(
-                        "answer", Map.of("type", "string"),
-                        "basis", Map.of("type", "string", "enum", List.of("DOCUMENT", "CONVERSATION", "CALCULATION", "NOT_FOUND")),
-                        "evidenceIds", Map.of("type", "array", "items", Map.of("type", "string"))),
-                        "required", List.of("answer", "basis", "evidenceIds"), "additionalProperties", false)))));
+        body.add("response_format", JSON.toJsonTree(verification
+                ? Map.of("type", "json_schema", "json_schema", Map.of("name", "semantic_verdict", "strict", true,
+                        "schema", Map.of("type", "object", "properties", Map.of("verdict", Map.of("type", "string",
+                                "enum", List.of("SUPPORTED", "UNSUPPORTED_EVIDENCE", "INCONSISTENT_CALCULATION",
+                                        "SEMANTIC_FAILURE"))), "required", List.of("verdict"), "additionalProperties", false)))
+                : Map.of("type", "json_schema", "json_schema", Map.of(
+                        "name", "grounded_answer", "strict", true, "schema", Map.of("type", "object", "properties", Map.of(
+                                "answer", Map.of("type", "string"),
+                                "basis", Map.of("type", "string", "enum", List.of("DOCUMENT", "CONVERSATION", "CALCULATION", "NOT_FOUND")),
+                                "evidenceIds", Map.of("type", "array", "items", Map.of("type", "string"))),
+                                "required", List.of("answer", "basis", "evidenceIds"), "additionalProperties", false)))));
         HttpRequest request = HttpRequest.newBuilder(endpoint).timeout(timeout)
                 .header("Authorization", "Bearer " + key).header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(JSON.toJson(body))).build();
@@ -92,7 +98,7 @@ public final class OpenAiLanguageModel implements LanguageModel {
             try {
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 int status = response.statusCode();
-                if (status >= 200 && status < 300) return parse(response.body());
+                if (status >= 200 && status < 300) return parse(response.body(), verification);
                 if (attempt == 3 || !(status == 429 || status >= 500 && status <= 599)) {
                     LOG.warning("api_failure status=" + status);
                     throw new AgentException("OpenAI request failed with HTTP " + status + ". Check model access, credentials, or quota.");
@@ -116,7 +122,7 @@ public final class OpenAiLanguageModel implements LanguageModel {
         }
         throw new AgentException("OpenAI retry limit reached.");
     }
-    private Reply parse(String body) throws AgentException {
+    private Reply parse(String body, boolean verification) throws AgentException {
         try {
             if (body.length() > 100_000) throw new AgentException("OpenAI response exceeded the supported size.");
             JsonObject choice = JsonParser.parseString(body).getAsJsonObject().getAsJsonArray("choices").get(0).getAsJsonObject();
@@ -136,6 +142,13 @@ public final class OpenAiLanguageModel implements LanguageModel {
             if (message.has("tool_calls") && !message.get("tool_calls").isJsonNull())
                 throw new AgentException("The model returned inconsistent tool metadata.");
             JsonObject answer = JsonParser.parseString(string(message, "content")).getAsJsonObject();
+            if (verification) {
+                if (answer.size() != 1) throw new IllegalArgumentException();
+                String verdict = string(answer, "verdict");
+                if (!List.of("SUPPORTED", "UNSUPPORTED_EVIDENCE", "INCONSISTENT_CALCULATION", "SEMANTIC_FAILURE")
+                        .contains(verdict)) throw new IllegalArgumentException();
+                return new Verification(verdict);
+            }
             if (answer.size() != 3) throw new IllegalArgumentException();
             List<String> ids = new ArrayList<>();
             for (JsonElement id : answer.getAsJsonArray("evidenceIds")) {

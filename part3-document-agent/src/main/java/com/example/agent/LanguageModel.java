@@ -8,8 +8,9 @@ public interface LanguageModel {
     Reply respond(String instructions, List<Message> messages, List<Tool> tools) throws AgentException;
 
     record Tool(String name, String description, String argument) {}
-    sealed interface Reply permits ToolCall, Answer {}
+    sealed interface Reply permits ToolCall, Answer, Verification {}
     record ToolCall(String id, String name, String arguments) implements Reply {}
+    record Verification(String verdict) implements Reply {}
     enum Basis { DOCUMENT, CONVERSATION, CALCULATION, NOT_FOUND }
     record Answer(String text, Basis basis, List<String> evidenceIds) implements Reply {
         public Answer { evidenceIds = List.copyOf(evidenceIds); }

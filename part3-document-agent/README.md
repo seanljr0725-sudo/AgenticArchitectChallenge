@@ -110,7 +110,8 @@ and an unnecessary no-hit search does not itself force NOT_FOUND.
 
 For DOCUMENT, CONVERSATION, or CALCULATION drafts, a separate, tool-free model
 call checks whether the draft addresses the current user message and fits its
-claimed basis. Document claims must be supported by the cited passages; derived
+claimed basis. This call uses a dedicated, constrained verdict schema. Document
+claims must be supported by the cited passages; derived
 arithmetic must match the supplied calculator expression and deterministic result.
 The calculator result, rather than the model's own arithmetic, is authoritative.
 Conversation answers may use the
@@ -241,7 +242,7 @@ supply the RM1,200 amount without a new search; calculator(`1200*4`) supplies 4,
 
 Single text document and one CLI conversation; English-oriented lexical search
 without synonym expansion, stemming, or semantic embeddings; finite context;
-no persistent memory; no live-model quality evaluation. Ambiguous queries can
+no persistent memory; live-model behavior is not covered by automated tests. Ambiguous queries can
 retrieve loosely related passages or miss useful wording. Future-year totals
 are hypothetical arithmetic, not guarantees of future policy. No UI, web server,
 authentication, multi-agent system, or production infrastructure is included.
