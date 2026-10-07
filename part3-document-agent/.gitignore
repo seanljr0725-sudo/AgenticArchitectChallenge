@@ -1,0 +1,6 @@
+/target/
+/.cache/
+.env
+*.log
+.idea/
+*.iml

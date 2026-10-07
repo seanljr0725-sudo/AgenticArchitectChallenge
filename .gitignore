@@ -1,0 +1,20 @@
+# Local credentials
+.env
+.env.*
+!.env.example
+
+# Build and dependency caches
+target/
+.cache/
+
+# Operating system, editor, and local reports
+.DS_Store
+.idea/
+.vscode/
+*.iml
+*.log
+
+# Local Playwright artifacts
+ms-playwright/
+playwright-report/
+test-results/

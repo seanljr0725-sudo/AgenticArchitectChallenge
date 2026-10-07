@@ -1,0 +1,23 @@
+Fictional Employee Handbook — SAMPLE DATA ONLY
+This handbook describes the invented company Cedar Example Sdn Bhd. It is demonstration data, not legal advice or a real employment policy.
+
+Annual leave
+Employees receive 18 days of paid annual leave per year. Annual leave requests require manager approval at least five working days in advance.
+
+Medical leave
+Employees receive 14 days of paid medical leave per year. A medical certificate is required for absences longer than two consecutive working days.
+
+Remote work
+Employees may work remotely up to two days per week with prior manager approval.
+
+Professional training allowance
+Employees receive RM1,200 per year for approved professional training. Unused training allowance does not carry forward to the next year.
+
+Working hours
+Standard working hours are 9:00 a.m. to 6:00 p.m., Monday through Friday, including a one-hour lunch break.
+
+Equipment
+The company provides one laptop to each employee. Company equipment must be returned on the final working day.
+
+Expense reimbursement
+Approved business expenses must be submitted with receipts within 30 calendar days of purchase.
